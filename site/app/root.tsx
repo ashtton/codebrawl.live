@@ -1,14 +1,12 @@
 import {
   isRouteErrorResponse,
-  Links,
-  Meta,
   Outlet,
-  Scripts,
-  ScrollRestoration,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { rootAuthLoader } from "@clerk/react-router/ssr.server";
+import { ClerkProvider, SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/react-router";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,26 +21,39 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
+export async function loader(args: Route.LoaderArgs) {
+  return rootAuthLoader(args);
 }
 
-export default function App() {
-  return <Outlet />;
+export { Layout } from "./components/Layout";
+
+import { Provider } from "react-redux";
+import { store } from "./state/store";
+import React, { useEffect } from "react";
+import { Header } from "./components/Header";
+import { ConnectionOverlay } from "./components/ConnectionOverlay";
+import { AutoConnect } from "./components/AutoConnect";
+import { SignedOutGate } from "./components/SignedOutGate";
+import { Toasts } from "./components/Toasts";
+
+export default function App({ loaderData }: Route.ComponentProps) {
+  return (
+    <ClerkProvider loaderData={loaderData}>
+      <Provider store={store}>
+        <Header />
+        <SignedIn>
+          <ConnectionOverlay>
+            <Outlet />
+          </ConnectionOverlay>
+          <AutoConnect />
+        </SignedIn>
+        <SignedOut>
+          <SignedOutGate />
+        </SignedOut>
+        <Toasts />
+      </Provider>
+    </ClerkProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
