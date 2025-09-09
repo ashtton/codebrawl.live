@@ -160,12 +160,19 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
 
       if (manualClose) return;
 
+      // Do not reconnect if we don't have any auth info (e.g., logged out)
+      if (!lastAuth?.token && !lastAuth?.userId) {
+        return;
+      }
+
       // Setup reconnection with exponential backoff
       const baseDelay = Math.min(30000, 1000 * Math.pow(2, retries++));
       const jitter = Math.floor(Math.random() * 500);
       const delay = baseDelay + jitter;
 
       const attempt = () => {
+        // Stop attempts if auth is no longer present (e.g., user logged out during backoff)
+        if (!lastAuth?.token && !lastAuth?.userId) return;
         if (typeof navigator !== 'undefined' && 'onLine' in navigator && !navigator.onLine) {
           reconnectTimer = setTimeout(attempt, 3000);
           return;

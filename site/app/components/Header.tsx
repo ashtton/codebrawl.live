@@ -9,9 +9,6 @@ export function Header() {
           <SignedIn>
             <UserButton />
           </SignedIn>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
         </div>
       </div>
     </header>

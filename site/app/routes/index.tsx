@@ -2,8 +2,8 @@ import type { Route } from "./+types/index"
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "codebrawl.live" },
+    { name: "description", content: "Play other developers in a real time coding challenge! Climb the leaderboards and become the quickest coder on the site." },
   ];
 }
 
@@ -13,7 +13,7 @@ function LobbyView() {
   return <div>
     <h1>Lobby</h1>
     <p>Welcome! Waiting for match or join/create a room.</p>
-  </div>;
+  </div>
 }
 function GameView() {
   const matchId = useAppSelector(s => s.appState.inGame?.matchId);

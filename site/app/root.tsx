@@ -33,22 +33,22 @@ import React, { useEffect } from "react";
 import { Header } from "./components/Header";
 import { ConnectionOverlay } from "./components/ConnectionOverlay";
 import { AutoConnect } from "./components/AutoConnect";
-import { SignedOutGate } from "./components/SignedOutGate";
+import { SignedOutPage } from "~/pages/SignedOut";
 import { Toasts } from "./components/Toasts";
 
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider loaderData={loaderData}>
       <Provider store={store}>
-        <Header />
         <SignedIn>
+          <Header />
           <ConnectionOverlay>
             <Outlet />
           </ConnectionOverlay>
           <AutoConnect />
         </SignedIn>
         <SignedOut>
-          <SignedOutGate />
+          <SignedOutPage />
         </SignedOut>
         <Toasts />
       </Provider>
