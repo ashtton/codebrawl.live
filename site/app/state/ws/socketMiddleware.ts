@@ -52,7 +52,7 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
 
         store.dispatch(connectionChanged("connecting"));
 
-        const base = (import.meta as any).env?.VITE_WS_URL || "http://localhost:8080/ws";
+        const base = (import.meta as any).env?.API_URL + "/ws"
         const url = new URL(base);
 
         if (!/^wss?:/i.test(base)) {
