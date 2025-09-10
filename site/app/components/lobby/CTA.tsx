@@ -10,11 +10,9 @@ export function CTA({onJoinQueue, onCreatePrivate}: Props) {
         <div className="mt-10 flex flex-col items-center justify-center gap-3">
             <button
                 onClick={onJoinQueue}
-                className="group relative inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-fuchsia-500/20 ring-1 ring-white/10 transition-all hover:from-fuchsia-500 hover:to-indigo-500 hover:shadow-fuchsia-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
-                <span className="relative z-10">Join queue</span>
-                <span
-                    className="absolute inset-0 -z-0 rounded-lg opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-r from-fuchsia-600 to-indigo-600"/>
+                <span>Join queue</span>
             </button>
             <button
                 onClick={onCreatePrivate}

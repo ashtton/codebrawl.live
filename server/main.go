@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"server/config"
+	"server/connections"
+	"server/events"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -18,29 +23,41 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
+var reg = connections.NewRegistry()
 
+func wsHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
 	defer conn.Close()
-	log.Println("Connected")
+	id := fmt.Sprintf("%p", conn)
+	reg.Set(id, "", connections.StateConnecting)
+	log.Println("Connected", id)
 	for {
-		messageType, message, err := conn.ReadMessage()
+		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Error reading message:", err)
-			break // Exit the loop on error (e.g., client disconnected).
-		}
-
-		fmt.Printf("Received message: %s\n", message)
-
-		// Echo the received message back to the client.
-		if err := conn.WriteMessage(messageType, message); err != nil {
-			log.Println("Error writing message:", err)
+			reg.UpdateState(id, connections.StateClosed)
 			break
 		}
+
+		evType, handled, derr := events.Dispatch(context.Background(), conn, id, reg, message)
+		if derr != nil {
+			resp := map[string]any{"type": "error", "error": derr.Error()}
+			b, _ := json.Marshal(resp)
+			_ = conn.WriteMessage(websocket.TextMessage, b)
+		}
+
+		if !handled {
+			fmt.Printf("Unhandled event %s %s", evType, message)
+		}
+
+		if evType != "" {
+			reg.UpdateState(id, connections.State(evType))
+		}
+		_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	}
+	reg.Delete(id)
 }
 
 func main() {

@@ -1,8 +1,9 @@
 import type {Middleware} from "@reduxjs/toolkit";
 import {wsConnect, wsDisconnect} from "./intents";
 import {connectionChanged} from "../slices/connectionSlice";
-import {hydrateFromServer} from "../slices/appStateSlice";
 import {pushToast} from "../slices/notificationsSlice";
+import { trySend, decodeMessage } from "./messages";
+import { createBaseOnMessage } from "./handlers";
 
 interface AuthData {
     token?: string;
@@ -32,7 +33,7 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
         if (socket && (state === OPEN || state === CONNECTING)) {
             if (state === OPEN && (token || userId)) {
                 try {
-                    socket.send(JSON.stringify({type: "auth", userId, token}));
+                    trySend(socket, {type: "auth", userId, token});
                 } catch {
                 }
             }
@@ -94,47 +95,26 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
             }
 
             setTimeout(() => {
-                try {
-                    socket?.send(JSON.stringify({type: "auth", userId, token}));
-                } catch {
-                }
+                trySend(socket, {type: "auth", userId, token});
             }, 10);
 
             if (keepAliveTimer) {
                 clearInterval(keepAliveTimer);
             }
             keepAliveTimer = setInterval(() => {
-                try {
-                    socket?.send(JSON.stringify({type: 'ping'}));
-                } catch {
-                }
+                trySend(socket, {type: 'ping'});
             }, 25000);
 
             const authOkTimeout = setTimeout(() => {
-                try {
-                    socket?.send(JSON.stringify({type: "client:hello"}));
-                } catch {
-                }
+                trySend(socket, {type: "client:hello"});
             }, 800);
 
             const prevOnMessage = socket.onmessage;
             socket.onmessage = (ev) => {
-                try {
-                    const msg = JSON.parse((ev as MessageEvent).data as string);
-                    if (msg?.type === 'auth-ok' || msg?.type === 'ready') {
-                        clearTimeout(authOkTimeout);
-                        try {
-                            socket?.send(JSON.stringify({type: 'client:hello'}));
-                        } catch {
-                        }
-                    }
-                    if (msg?.type === 'ping') {
-                        try {
-                            socket?.send(JSON.stringify({type: 'pong'}));
-                        } catch {
-                        }
-                    }
-                } catch {
+                const msg = decodeMessage((ev as MessageEvent).data as string);
+                if (msg && (msg.type === 'auth-ok' || msg.type === 'ready')) {
+                    clearTimeout(authOkTimeout);
+                    trySend(socket, { type: 'client:hello' });
                 }
                 prevOnMessage?.(ev as MessageEvent);
             };
@@ -184,20 +164,7 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
             reconnectTimer = setTimeout(attempt, delay);
         };
 
-        const baseOnMessage = (ev: MessageEvent) => {
-            try {
-                const msg = JSON.parse(ev.data);
-                switch (msg.type) {
-                    case "snapshot":
-                    case "app:mode":
-                        if (msg.state) {
-                            store.dispatch(hydrateFromServer(msg.state));
-                        }
-                        break;
-                }
-            } catch {
-            }
-        };
+        const baseOnMessage = createBaseOnMessage(store, socket);
         socket.onmessage = baseOnMessage as any;
 
         return next(action);

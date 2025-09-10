@@ -3,6 +3,7 @@ import {Header} from "~/components/lobby/Header";
 import {Tabs, type TabKey} from "~/components/lobby/Tabs";
 import {QueueSection} from "~/components/lobby/QueueSection";
 import {RoomsSection} from "~/components/lobby/RoomsSection";
+import {TopPlayers} from "~/components/lobby/TopPlayers";
 import {useAppDispatch} from "~/state/store";
 import {pushToast} from "~/state/slices/notificationsSlice";
 import {useUser} from "@clerk/react-router";
@@ -14,7 +15,25 @@ export function LobbyPage() {
     const {user} = useUser();
     const username = user?.firstName ?? user?.username ?? "Coder";
 
-    const splash = splashes[Math.floor(Math.random() * splashes.length)].replace("%username", username)
+    const [splash, setSplash] = React.useState<string>("");
+
+    React.useEffect(() => {
+        if (typeof document === "undefined") return;
+        // Read from cookie; if absent or expired, pick new and set for 5 minutes
+        import("~/lib/cookie").then(({ getCookie, setCookie }) => {
+            const existing = getCookie("cb_splash");
+            if (existing && existing.length > 0) {
+                setSplash(existing.replace("%username", username));
+                return;
+            }
+            const next = splashes[Math.floor(Math.random() * splashes.length)];
+            setCookie("cb_splash", next, 5 * 60);
+            setSplash(next.replace("%username", username));
+        }).catch(() => {
+            const next = splashes[Math.floor(Math.random() * splashes.length)];
+            setSplash(next.replace("%username", username));
+        });
+    }, [username]);
 
     function handleJoinUnranked() {
         dispatch(pushToast({text: "Joining unranked queue...", type: "info"}));
@@ -28,31 +47,37 @@ export function LobbyPage() {
         dispatch(pushToast({text: `Joining room ${roomId}...`, type: "info"}));
     }
 
+    function handleJoinPrivate() {
+        let code: string | null = null;
+        if (typeof window !== "undefined") {
+            code = window.prompt("Enter room code or URL:")?.trim() || null;
+        }
+        if (!code) return;
+        dispatch(pushToast({ text: `Joining private room ${code}...`, type: "info" }));
+    }
+
     return (
         <main className="relative min-h-dvh overflow-hidden bg-black text-white">
-            <div className="pointer-events-none absolute inset-0">
-                <div
-                    className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,#6b7280_1px,transparent_1px)] [background-size:40px_40px]"/>
-                <div className="absolute -top-32 -left-32 h-[40rem] w-[40rem] rounded-full bg-fuchsia-600/20 blur-3xl"/>
-                <div
-                    className="absolute -bottom-32 -right-32 h-[40rem] w-[40rem] rounded-full bg-indigo-600/20 blur-3xl"/>
-            </div>
-
             <section className="relative z-10 flex min-h-dvh flex-col">
                 <Header/>
 
                 <div className="mx-auto flex w-full max-w-9/12 flex-1 flex-col items-center px-6 pb-16 pt-8">
                     <div className="flex w-full items-center justify-between">
-                        <h1 className="text-2xl font-bold">{splash}</h1>
+                        <div className="grid">
+                            <h1 className="text-2xl font-bold">Welcome back!</h1>
+                            <span className="text-gray-200 tracking-wide">{splash}</span>
+                        </div>
                         <Tabs value={tab} onChange={setTab}/>
                     </div>
 
-                    <div className="mt-8 w-full space-y-6">
+                    <div className="mt-8 w-full">
                         {tab === "home" && (
-                            <div>
-                                <QueueSection onJoinUnranked={handleJoinUnranked}/>
-                                <div className="mt-6">
-                                    <RoomsSection onJoinRoom={handleJoinRoom} onCreatePrivate={handleCreatePrivate}/>
+                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                                <div className="lg:col-span-2">
+                                    <QueueSection onJoinUnranked={handleJoinUnranked} onCreateRoom={handleCreatePrivate} onJoinPrivate={handleJoinPrivate}/>
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <TopPlayers />
                                 </div>
                             </div>
                         )}

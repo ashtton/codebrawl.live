@@ -116,7 +116,7 @@ export function RoomsSection({rooms = [], onJoinRoom, onCreatePrivate, pageSize 
                                     `inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-white/10 ${
                                         full
                                             ? "cursor-not-allowed bg-white/10 text-white/50"
-                                            : "bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white hover:from-fuchsia-500 hover:to-indigo-500"
+                                            : "bg-blue-600 text-white hover:bg-blue-500"
                                     }`
                                 }
                                 aria-label={full ? `Room ${displayName} is full` : `Join room ${displayName}`}

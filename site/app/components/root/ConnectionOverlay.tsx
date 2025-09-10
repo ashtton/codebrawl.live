@@ -15,12 +15,12 @@ export function ConnectionOverlay({children}: { children: React.ReactNode }) {
             {show && (
                 <div className="fixed inset-0 z-50 grid place-items-center overflow-hidden">
                     <div
-                        className="absolute inset-0 bg-gradient-to-b from-neutral-900/90 via-neutral-950/95 to-black/95 backdrop-blur-md"/>
+                        className="absolute inset-0 bg-black/90 backdrop-blur-md"/>
 
                     <div className="relative w-[min(92vw,520px)] origin-center rounded-2xl border border-white/10 bg-neutral-900/40 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-1 ring-black/40 backdrop-blur-xl text-white
                            animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300">
                         <div
-                            className="absolute -inset-px rounded-2xl bg-[radial-gradient(40%_60%_at_50%_-20%,rgba(255,255,255,0.08),rgba(255,255,255,0))] pointer-events-none"/>
+                            className="absolute -inset-px rounded-2xl pointer-events-none"/>
 
                         <div className="mb-3 flex items-center gap-2.5">
                             <span
@@ -32,7 +32,7 @@ export function ConnectionOverlay({children}: { children: React.ReactNode }) {
 
                         <div className="mt-2">
                             <div className="h-2 w-full overflow-hidden rounded-full bg-white/10 shadow-inner">
-                                <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 shadow-[0_2px_8px_rgba(59,130,246,0.45)]
+                                <div className="h-full w-2/5 rounded-full bg-blue-500 shadow-[0_2px_8px_rgba(59,130,246,0.45)]
                             animate-[progressSlide_1.15s_ease-in-out_infinite]"/>
                             </div>
                             <p className="mt-2 text-xs text-white/60">Hold tight while we establish a secure
