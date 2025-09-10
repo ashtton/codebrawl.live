@@ -52,7 +52,7 @@ func main() {
 	config.LoadEnvironment()
 
 	http.HandleFunc("/ws", wsHandler)
-	err = http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":"+config.Port, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}

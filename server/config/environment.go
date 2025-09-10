@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 const AwsRegion = "us-east-1"
 
@@ -12,10 +14,13 @@ var S3SubmissionsBucket string
 var SubmissionsQueueUrl string
 var ResultsQueueUrl string
 
+var Port string
+
 func LoadEnvironment() {
 	AwsAccountId = os.Getenv("AWS_ACCOUNT_ID")
 	AwsAccountSecret = os.Getenv("AWS_ACCOUNT_SECRET")
 	S3SubmissionsBucket = os.Getenv("S3_SUBMISSIONS")
 	SubmissionsQueueUrl = os.Getenv("SQS_SUBMISSIONS")
 	ResultsQueueUrl = os.Getenv("SQS_RESULTS")
+	Port = os.Getenv("PORT")
 }

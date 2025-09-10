@@ -1,0 +1,12 @@
+# Docker build context exclusions
+.git
+.gitignore
+**/.DS_Store
+node_modules
+vendor
+bin
+build
+dist
+*.log
+.env
+**/*.md
