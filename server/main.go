@@ -50,7 +50,6 @@ func main() {
 	}
 
 	config.LoadEnvironment()
-	sendDummySubmission()
 
 	http.HandleFunc("/ws", wsHandler)
 	err = http.ListenAndServe(":8080", nil)

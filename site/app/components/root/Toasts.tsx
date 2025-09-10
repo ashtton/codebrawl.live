@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "../state/store";
-import { removeToast } from "../state/slices/notificationsSlice";
+import { useAppDispatch, useAppSelector } from "../../state/store";
+import { removeToast } from "../../state/slices/notificationsSlice";
 
 export function Toasts() {
   const toasts = useAppSelector((s) => s.notifications);

@@ -1,5 +1,5 @@
 import React from "react";
-import { SignInButton } from "@clerk/react-router";
+import {SignInButton} from "@clerk/react-router";
 
 export function SignedOutPage() {
     return (
@@ -46,11 +46,14 @@ export function SignedOutPage() {
         </main>
     );
 }
+
 function FloatingCards() {
     return (
         <div aria-hidden className="hidden absolute lg:block pointer-events-none inset-0 z-0">
-            <Card className="left-6 top-24 animate-[float_6s_ease-in-out_infinite]" codeLines={["function sum(a,b){", "  return a+b", "}"]} />
-            <Card className="right-8 top-32 animate-[float_7s_ease-in-out_infinite]" codeLines={["const arr = [1,2,3]", "arr.map(x=>x*x)"]} />
+            <Card className="left-6 top-24 animate-[float_6s_ease-in-out_infinite]"
+                  codeLines={["function sum(a,b){", "  return a+b", "}"]}/>
+            <Card className="right-8 top-32 animate-[float_7s_ease-in-out_infinite]"
+                  codeLines={["const arr = [1,2,3]", "arr.map(x=>x*x)"]}/>
             <Card
                 className="left-16 bottom-24 animate-[float_8s_ease-in-out_infinite]"
                 codeLines={[
@@ -61,23 +64,26 @@ function FloatingCards() {
                     "}"
                 ]}
             />
-            <Card className="left-[20rem] top-[4rem] animate-[float_9.5s_ease-in-out_infinite]" codeLines={["// my debugger", "console.log('it works on my machine!🤷‍♂️')"]} />
-            <Card className="right-[4rem] bottom-[14rem] animate-[float_7.2s_ease-in-out_infinite]" codeLines={["// when the tests pass", "function miracle() { return '✨magic✨' }"]} />
+            <Card className="left-[20rem] top-[4rem] animate-[float_9.5s_ease-in-out_infinite]"
+                  codeLines={["// my debugger", "console.log('it works on my machine!🤷‍♂️')"]}/>
+            <Card className="right-[4rem] bottom-[14rem] animate-[float_7.2s_ease-in-out_infinite]"
+                  codeLines={["// when the tests pass", "function miracle() { return '✨magic✨' }"]}/>
         </div>
     );
 }
 
-function Card({ className, codeLines }: { className?: string; codeLines: string[] }) {
-  return (
-    <div className={`absolute rounded-xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-3 text-xs text-white/80 shadow-lg ring-1 ring-white/10 backdrop-blur ${className ?? ""}`}>
-      <div className="flex items-center gap-1 pb-2">
-        <span className="h-2 w-2 rounded-full bg-red-400" />
-        <span className="h-2 w-2 rounded-full bg-yellow-400" />
-        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-      </div>
-      <pre className="whitespace-pre leading-5">
+function Card({className, codeLines}: { className?: string; codeLines: string[] }) {
+    return (
+        <div
+            className={`absolute rounded-xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-3 text-xs text-white/80 shadow-lg ring-1 ring-white/10 backdrop-blur ${className ?? ""}`}>
+            <div className="flex items-center gap-1 pb-2">
+                <span className="h-2 w-2 rounded-full bg-red-400"/>
+                <span className="h-2 w-2 rounded-full bg-yellow-400"/>
+                <span className="h-2 w-2 rounded-full bg-emerald-400"/>
+            </div>
+            <pre className="whitespace-pre leading-5">
         {codeLines.join("\n")}
       </pre>
-    </div>
-  );
+        </div>
+    );
 }
