@@ -57,20 +57,12 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
         const base = (publicBase || origin) + "/ws";
         const url = new URL(base);
 
-        if (!/^wss?:/i.test(base)) {
-            const preferSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
-            url.protocol = preferSecure ? 'wss:' : 'ws:';
-        } else {
-            url.protocol = url.protocol.replace("http", "ws");
-        }
+        url.protocol = "ws:"
 
         if (token) url.searchParams.set("token", token);
         if (userId) url.searchParams.set("userId", userId);
 
-        const subprotocol = (import.meta as any).env?.VITE_WS_SUBPROTOCOL as string | undefined;
-        socket = subprotocol
-            ? new WebSocket(url.toString(), subprotocol)
-            : new WebSocket(url.toString());
+        socket = new WebSocket(url.toString())
 
         socket.onerror = () => {
             try {
