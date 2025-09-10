@@ -52,7 +52,9 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
 
         store.dispatch(connectionChanged("connecting"));
 
-        const base = (import.meta as any).env?.API_URL + "/ws"
+        const publicBase = (import.meta as any).env?.VITE_API_URL as string | undefined;
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const base = (publicBase || origin) + "/ws";
         const url = new URL(base);
 
         if (!/^wss?:/i.test(base)) {
