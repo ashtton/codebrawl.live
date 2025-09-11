@@ -8,6 +8,7 @@ import {useAppDispatch} from "~/state/store";
 import {pushToast} from "~/state/slices/notificationsSlice";
 import {useUser} from "@clerk/react-router";
 import {splashes} from "~/lib/splashes";
+import { wsSend } from "~/state/ws/intents";
 
 export function LobbyPage() {
     const [tab, setTab] = React.useState<TabKey>("home");
@@ -44,16 +45,29 @@ export function LobbyPage() {
     }
 
     function handleJoinRoom(roomId: string) {
-        dispatch(pushToast({text: `Joining room ${roomId}...`, type: "info"}));
+        const code = (roomId || "").trim();
+        if (!code) return;
+        dispatch(pushToast({ text: `Joining room ${code}...`, type: "info" }));
+        dispatch(wsSend({ message: { type: "room:join", code } }));
     }
 
     function handleJoinPrivate() {
-        let code: string | null = null;
+        let input: string | null = null;
         if (typeof window !== "undefined") {
-            code = window.prompt("Enter room code or URL:")?.trim() || null;
+            input = window.prompt("Enter room code or URL:")?.trim() || null;
         }
+        if (!input) return;
+        let code = input.trim();
+        try {
+            if (code.includes("/")) {
+                const parts = code.split("/").filter(Boolean);
+                code = parts[parts.length - 1];
+            }
+            code = code.split('?')[0];
+        } catch {}
         if (!code) return;
         dispatch(pushToast({ text: `Joining private room ${code}...`, type: "info" }));
+        dispatch(wsSend({ message: { type: "room:join", code } }));
     }
 
     return (

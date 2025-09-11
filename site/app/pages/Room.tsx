@@ -1,8 +1,9 @@
 import React from "react";
-import { useAppSelector } from "~/state/store";
+import { useAppDispatch, useAppSelector } from "~/state/store";
 import { ChatBox } from "~/components/room/ChatBox";
 import { UserList } from "~/components/room/UserList";
 import { LeaveRoomButton } from "~/components/room/LeaveRoomButton";
+import { pushToast } from "~/state/slices/notificationsSlice";
 
 export function RoomPage() {
   const presence = useAppSelector((s) => s.room.presence);
@@ -20,6 +21,19 @@ export function RoomPage() {
   }
 
   const humanState = room.state === "lobby" ? "Waiting" : room.state === "in-game" ? "In Game" : "Ended";
+  const dispatch = useAppDispatch();
+  const [copied, setCopied] = React.useState(false);
+
+  async function handleCopy() {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(room.code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+        dispatch(pushToast({ text: "Room code copied", type: "info" }));
+      }
+    } catch {}
+  }
 
   return (
     <main className="container mx-auto p-4 pt-16">
@@ -27,7 +41,30 @@ export function RoomPage() {
         <header className="rounded-xl border border-white/10 bg-white/5 p-5 ring-1 ring-white/10">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-lg font-semibold">Room {room.code}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold">Room {room.code}</h1>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label={copied ? "Copied" : "Copy room code"}
+                  className="group inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[.7rem] text-gray-300 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                >
+                  <svg
+                    className="h-3.5 w-3.5 text-gray-400 transition-colors group-hover:text-gray-200"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span className="sr-only">{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
               <p className="text-sm text-white/70">Type: {room.type} · State: {humanState} · Max players: {room.maxUsers}</p>
             </div>
             <div className="flex items-center gap-2">
