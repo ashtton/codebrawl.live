@@ -1,18 +1,28 @@
 import type { AppStateData } from "../slices/appStateSlice";
+import type { Room } from "../slices/roomSlice";
 
 export type ServerMessage =
-  | { type: "auth-ok" }
+  | { type: "auth:ok"; userId?: string; issuer?: string; exp?: number }
   | { type: "ready" }
   | { type: "ping" }
   | { type: "snapshot"; state: AppStateData }
   | { type: "app:mode"; state: AppStateData }
+  | { type: "room:state"; room: Room | { state: "lobby" }; users?: { userId: string; username?: string; imageUrl?: string }[] }
+  | { type: "room:chat"; code: string; from: string; message: string; ts: number; username?: string; imageUrl?: string }
+    | { type: "room:created"; room: Room }
   | { type: string; [key: string]: unknown };
 
 export type ClientMessage =
   | { type: "auth"; token?: string; userId?: string }
   | { type: "client:hello" }
   | { type: "ping" }
-  | { type: "pong" };
+  | { type: "pong" }
+  | { type: "room:create"; roomType: "ranked" | "casual" | "private"; maxUsers?: number }
+  | { type: "room:join"; code: string }
+  | { type: "room:leave"; code: string }
+  | { type: "room:state"; code?: string }
+  | { type: "room:start"; code: string; gameState: unknown }
+  | { type: "room:chat"; code: string; message: string };
 
 export function safeJsonParse(input: unknown): unknown {
   if (typeof input !== "string") return input;

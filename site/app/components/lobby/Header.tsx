@@ -1,10 +1,13 @@
 import React from "react";
 import { UserButton, useUser } from "@clerk/react-router";
 import { Typewriter } from "~/components/common/Typewriter";
+import {pushToast} from "~/state/slices/notificationsSlice";
+import {useAppDispatch} from "~/state/store";
 
 export function Header() {
   const { user } = useUser();
   const [copied, setCopied] = React.useState(false);
+  const dispatch = useAppDispatch()
 
   const refUrl = React.useMemo(() => {
       const origin = "codebrawl.live"
@@ -17,6 +20,7 @@ export function Header() {
         await navigator.clipboard.writeText(refUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
+        dispatch(pushToast({id: "referral", text: "Referral link copied to clipboard", type: "info"}))
       }
     } catch (_) {
       // noop
@@ -62,9 +66,6 @@ export function Header() {
             {refUrl}
           </code>
         </button>
-        <div className="hidden sm:flex flex-col leading-tight">
-          <span className={`text-emerald-400 text-xs ${copied ? "opacity-100" : "opacity-0"}`}>Copied</span>
-        </div>
       </div>
       <div className="flex items-center gap-4">
         <UserButton appearance={{ elements: { userButtonPopoverCard: "bg-zinc-900 text-white border border-white/10" } }} />

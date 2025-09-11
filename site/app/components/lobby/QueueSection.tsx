@@ -1,6 +1,7 @@
 import React from "react";
 import {useAppDispatch} from "~/state/store";
 import {pushToast} from "~/state/slices/notificationsSlice";
+import CreateRoomModal from "~/components/lobby/CreateRoomModal";
 
 type Props = {
     onJoinUnranked?: () => void;
@@ -13,11 +14,17 @@ export function QueueSection({onJoinUnranked, onCreateRoom, onJoinPrivate}: Prop
 
     const [unrankedCount, setUnrankedCount] = React.useState(() => 0);
     const [rankedCount, setRankedCount] = React.useState(() => 0);
+    const [showCreateModal, setShowCreateModal] = React.useState(false);
 
     function handleRankedClick(e: React.MouseEvent) {
         e.preventDefault();
         dispatch(pushToast({text: "Ranked queue is currently unavailable", type: "info"}));
     }
+
+    function handleOpenCreate() {
+        setShowCreateModal(true);
+    }
+
 
     return (
         <div className="h-full rounded-2xl border border-white/10 bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
@@ -55,10 +62,11 @@ export function QueueSection({onJoinUnranked, onCreateRoom, onJoinPrivate}: Prop
                 <div className="group relative overflow-hidden rounded-xl ring-1 ring-white/10 border border-white/10 bg-white/5">
                     <div className="p-5 flex flex-col h-full justify-between">
                         <div className="flex items-center gap-2">
-                            <svg className="h-5 w-5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                                <path d="M8 21h8l1-8H7l1 8z"/>
-                                <path d="M7 7h10"/>
-                                <path d="M9 7l-1-4h8l-1 4"/>
+                            <svg className="h-5 w-5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                <path d="M14.5 17.5L19 13l-4.5-4.5"/>
+                                <path d="M9.5 17.5L5 13l4.5-4.5"/>
+                                <path d="M7 13h10"/>
                             </svg>
                             <h4 className="text-base font-semibold">Ranked</h4>
                         </div>
@@ -89,8 +97,8 @@ export function QueueSection({onJoinUnranked, onCreateRoom, onJoinPrivate}: Prop
                     <p className="mt-1 text-sm text-white/70">Play games with friends in invite‑only rooms. Share a code or link to jump in together.</p>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                         <button
-                            onClick={onCreateRoom}
-                            aria-label="Create a private room"
+                            onClick={handleOpenCreate}
+                            aria-label="Create a room"
                             className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-500 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-800"
                         >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -112,6 +120,12 @@ export function QueueSection({onJoinUnranked, onCreateRoom, onJoinPrivate}: Prop
                     </div>
                 </div>
             </div>
+
+            <CreateRoomModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onCreateRoom={onCreateRoom}
+            />
         </div>
     );
 }

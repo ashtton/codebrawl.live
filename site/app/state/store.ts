@@ -4,6 +4,7 @@ import type {TypedUseSelectorHook} from "react-redux";
 import connectionReducer from "./slices/connectionSlice";
 import appStateReducer from "./slices/appStateSlice";
 import notificationsReducer from "./slices/notificationsSlice";
+import roomReducer from "./slices/roomSlice";
 import { socketMiddleware } from "./ws/socketMiddleware";
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     connection: connectionReducer,
     appState: appStateReducer,
     notifications: notificationsReducer,
+    room: roomReducer,
   },
   middleware: (getDefault) => getDefault().concat(socketMiddleware),
 });

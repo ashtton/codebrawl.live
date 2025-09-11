@@ -1,5 +1,5 @@
 import type {Middleware} from "@reduxjs/toolkit";
-import {wsConnect, wsDisconnect} from "./intents";
+import {wsConnect, wsDisconnect, wsSend} from "./intents";
 import {connectionChanged} from "../slices/connectionSlice";
 import {pushToast} from "../slices/notificationsSlice";
 import { trySend, decodeMessage } from "./messages";
@@ -103,21 +103,27 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
             }
             keepAliveTimer = setInterval(() => {
                 trySend(socket, {type: 'ping'});
-            }, 25000);
+            }, 10000);
 
             const authOkTimeout = setTimeout(() => {
                 trySend(socket, {type: "client:hello"});
             }, 800);
 
-            const prevOnMessage = socket.onmessage;
-            socket.onmessage = (ev) => {
-                const msg = decodeMessage((ev as MessageEvent).data as string);
-                if (msg && (msg.type === 'auth-ok' || msg.type === 'ready')) {
-                    clearTimeout(authOkTimeout);
-                    trySend(socket, { type: 'client:hello' });
-                }
-                prevOnMessage?.(ev as MessageEvent);
-            };
+            if (socket !== null) {
+                const prevOnMessage = socket.onmessage;
+                socket.onmessage = (ev) => {
+                    const msg = decodeMessage((ev as MessageEvent).data as string);
+                    if (msg && (msg.type === 'auth:ok' || msg.type === 'ready')) {
+                        clearTimeout(authOkTimeout);
+                        trySend(socket, { type: 'client:hello' });
+                    }
+                    // @ts-ignore
+                    prevOnMessage?.(ev as MessageEvent);
+                };
+            }
+
+
+
         };
 
         socket.onclose = (ev: CloseEvent) => {
@@ -191,6 +197,11 @@ export const socketMiddleware: Middleware = (store) => (next) => (action) => {
         }
 
         socket = null;
+        return next(action);
+    }
+
+    if (wsSend.match(action)) {
+        trySend(socket, action.payload.message as any);
         return next(action);
     }
 

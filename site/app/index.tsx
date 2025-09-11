@@ -12,6 +12,7 @@ export function meta({}: Route.MetaArgs) {
 
 import {useAppSelector} from "./state/store";
 import {LobbyPage} from "./pages/Lobby";
+import { RoomPage } from "./pages/Room";
 
 function LobbyView() {
     return <LobbyPage/>
@@ -35,9 +36,12 @@ function SpectateView() {
 
 export default function Index() {
     const mode = useAppSelector((s) => s.appState.mode);
+    const presence = useAppSelector((s) => s.room.presence);
+    const inRoomWaiting = !!presence.room && presence.room.state === "lobby";
     return <main className="min-h-dvh bg-black">
-        {mode === "lobby" && <LobbyView/>}
-        {mode === "inGame" && <GameView/>}
-        {mode === "spectating" && <SpectateView/>}
+        {inRoomWaiting ? <RoomPage/> : null}
+        {!inRoomWaiting && mode === "lobby" && <LobbyView/>}
+        {!inRoomWaiting && mode === "inGame" && <GameView/>}
+        {!inRoomWaiting && mode === "spectating" && <SpectateView/>}
     </main>;
 }

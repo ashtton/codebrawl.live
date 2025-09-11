@@ -16,26 +16,21 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-// AuthMessage represents the message sent by the client for authentication over WS
-// Example:
-// {"type":"auth","userId":"user_...","token":"<jwt>"}
 type AuthMessage struct {
 	Type   string `json:"type"`
 	UserID string `json:"userId"`
 	Token  string `json:"token"`
 }
 
-// Verification result with key details
 type VerifyResult struct {
 	UserID    string
 	Subject   string
 	Issuer    string
 	ExpiresAt time.Time
+	Username  string
+	ImageURL  string
 }
 
-// VerifyClerkJWT verifies a Clerk JWT using the issuer's JWKS.
-// Required environment:
-// - CLERK_ISSUER (e.g., https://<your-app>.clerk.accounts.dev)
 func VerifyClerkJWT(ctx context.Context, tokenStr string) (*VerifyResult, error) {
 	issuer := strings.TrimSuffix(os.Getenv("CLERK_ISSUER"), "/")
 	if issuer == "" {
@@ -46,7 +41,6 @@ func VerifyClerkJWT(ctx context.Context, tokenStr string) (*VerifyResult, error)
 		jwksURL = issuer + "/.well-known/jwks.json"
 	}
 
-	// Parse token header to get kid
 	tok, _, err := new(jwt.Parser).ParseUnverified(tokenStr, jwt.MapClaims{})
 	if err != nil {
 		return nil, fmt.Errorf("parse token header: %w", err)
@@ -56,7 +50,6 @@ func VerifyClerkJWT(ctx context.Context, tokenStr string) (*VerifyResult, error)
 		return nil, errors.New("token missing kid")
 	}
 
-	// fetch JWKS and find the key by kid (simple implementation without cache for now)
 	resp, err := http.Get(jwksURL)
 	if err != nil {
 		return nil, fmt.Errorf("fetch jwks: %w", err)
@@ -107,14 +100,12 @@ func VerifyClerkJWT(ctx context.Context, tokenStr string) (*VerifyResult, error)
 		return nil, fmt.Errorf("invalid jwt: %w", err)
 	}
 
-	// basic claims checks
 	if iss, _ := claims["iss"].(string); iss != issuer {
 		return nil, errors.New("issuer mismatch")
 	}
 	if sub, _ := claims["sub"].(string); sub == "" {
 		return nil, errors.New("missing sub")
 	}
-	// exp is validated by jwt lib; extract
 	var expTime time.Time
 	if exp, ok := claims["exp"].(float64); ok {
 		expTime = time.Unix(int64(exp), 0)
@@ -125,10 +116,11 @@ func VerifyClerkJWT(ctx context.Context, tokenStr string) (*VerifyResult, error)
 		Subject:   stringOr(claims["sub"]),
 		Issuer:    stringOr(claims["iss"]),
 		ExpiresAt: expTime,
+		Username:  stringOr(claims["username"]),
+		ImageURL:  stringOr(claims["imageUrl"]),
 	}, nil
 }
 
-// ParseAuthMessage parses JSON and verifies token using Clerk
 func ParseAndVerifyAuthMessage(ctx context.Context, payload []byte) (*VerifyResult, error) {
 	var msg AuthMessage
 	if err := json.Unmarshal(payload, &msg); err != nil {
@@ -151,9 +143,7 @@ func ParseAndVerifyAuthMessage(ctx context.Context, payload []byte) (*VerifyResu
 	return res, nil
 }
 
-// helpers
 func base64URLDecode(s string) ([]byte, error) {
-	// base64url without padding -> with padding
 	s = strings.ReplaceAll(s, "-", "+")
 	s = strings.ReplaceAll(s, "_", "/")
 	switch len(s) % 4 {
@@ -167,7 +157,6 @@ func base64URLDecode(s string) ([]byte, error) {
 
 func bytesToBigInt(b []byte) *big.Int { var z big.Int; return z.SetBytes(b) }
 func bytesToInt(b []byte) int {
-	// exponent is small, big-endian
 	v := 0
 	for _, by := range b {
 		v = v<<8 | int(by)

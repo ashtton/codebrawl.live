@@ -12,6 +12,12 @@ Incoming WebSocket messages are dispatched by type via the events package. Each 
 
 Example: auth event is implemented in events/auth.go and responds with `auth:ok` or `auth:error`.
 
+## Rooms & Redis
+- Rooms and room state are stored in Redis. Provide REDIS_URL for this feature.
+- Users can create/join/leave rooms after authenticating. Chat messages are relayed via Redis Pub/Sub.
+- Configure max users via ROOM_MAX_USERS (default 8).
+- See frontend.md for event contracts.
+
 ## Docker
 
 Build the image:
@@ -20,20 +26,7 @@ Build the image:
 docker build -t codebrawl-server:latest .
 ```
 
-Run the container (exposes port 8080):
-
-```
-docker run --rm -p 8080:8080 \
-  --env AWS_ACCOUNT_ID=your_id \
-  --env AWS_ACCOUNT_SECRET=your_secret \
-  --env S3_SUBMISSIONS=your_bucket \
-  --env SQS_SUBMISSIONS=queue_url \
-  --env SQS_RESULTS=results_queue_url \
-  --env CLERK_ISSUER=https://your-app.clerk.accounts.dev \
-  codebrawl-server:latest
-```
-
-Alternatively, you can mount a .env file (optional in code):
+ you can mount a .env file:
 
 ```
 docker run --rm -p 8080:8080 --env-file .env codebrawl-server:latest

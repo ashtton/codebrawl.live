@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"server/config"
 	"server/connections"
+	"server/database"
 	"server/events"
 	"time"
 
@@ -30,6 +31,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	events.RegisterConn(conn)
+	defer events.UnregisterConn(conn)
 	defer conn.Close()
 	id := fmt.Sprintf("%p", conn)
 	reg.Set(id, "", connections.StateConnecting)
@@ -45,7 +48,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		if derr != nil {
 			resp := map[string]any{"type": "error", "error": derr.Error()}
 			b, _ := json.Marshal(resp)
-			_ = conn.WriteMessage(websocket.TextMessage, b)
+			_ = events.SafeWriteMessage(conn, b)
 		}
 
 		if !handled {
@@ -67,6 +70,12 @@ func main() {
 	}
 
 	config.LoadEnvironment()
+
+	// Initialize Redis (optional). If REDIS_URL is not set, this will no-op.
+	if derr := database.InitRedis(context.Background()); derr != nil {
+		log.Println("Redis init failed:", derr)
+	}
+	defer func() { _ = database.Close() }()
 
 	http.HandleFunc("/ws", wsHandler)
 	err = http.ListenAndServe(":"+config.Port, nil)
