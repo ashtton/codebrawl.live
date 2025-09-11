@@ -56,7 +56,7 @@ func VerifyClerkJWT(ctx context.Context, tokenStr string) (*VerifyResult, error)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("jwks http %d", resp.StatusCode)
+		return nil, fmt.Errorf("jwks http %d %v", resp.StatusCode, resp)
 	}
 	var jwks struct {
 		Keys []struct {

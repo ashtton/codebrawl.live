@@ -59,8 +59,22 @@ func writeJSON(conn *websocket.Conn, v any) {
 	_ = SafeWriteJSON(conn, v)
 }
 
-func startSubscription(ctx context.Context, conn *websocket.Conn, code string) {
+func startSubscription(ctx context.Context, conn *websocket.Conn, socketID string, code string) {
+	rdb := database.Client()
+	if rdb == nil {
+		return
+	}
+	subsKey := "subs:" + socketID
+	// If already subscribed, do nothing
+	if ok, _ := rdb.SIsMember(ctx, subsKey, code).Result(); ok {
+		return
+	}
+	if err := rdb.SAdd(ctx, subsKey, code).Err(); err != nil {
+		log.Println("failed to add subscription:", err)
+		return
+	}
 	go func() {
+		defer func() { _ = rdb.SRem(ctx, subsKey, code).Err() }()
 		w := func(b []byte) error {
 			return SafeWriteMessage(conn, b)
 		}
@@ -91,7 +105,7 @@ func roomCreate(c *Context) (bool, error) {
 		writeJSON(c.Conn, map[string]any{"type": "room:error", "error": err.Error()})
 		return true, nil
 	}
-	startSubscription(c.Ctx, c.Conn, r.Code)
+	startSubscription(c.Ctx, c.Conn, c.SocketID, r.Code)
 	writeJSON(c.Conn, map[string]any{"type": "room:created", "room": r})
 	return true, nil
 }
@@ -110,7 +124,7 @@ func roomJoin(c *Context) (bool, error) {
 		writeJSON(c.Conn, map[string]any{"type": "room:error", "error": err.Error()})
 		return true, nil
 	}
-	startSubscription(c.Ctx, c.Conn, r.Code)
+	startSubscription(c.Ctx, c.Conn, c.SocketID, r.Code)
 	// Enrich users with username and imageUrl from Redis when available
 	rdb := database.Client()
 	enriched := make([]map[string]string, 0, len(users))
@@ -180,7 +194,7 @@ func roomState(c *Context) (bool, error) {
 			if rc, _ := rooms.GetUserRoom(c.Ctx, uid); rc != "" {
 				if r, users, err := rooms.GetRoom(c.Ctx, rc); err == nil {
 					writeJSON(c.Conn, map[string]any{"type": "room:state", "room": r, "users": users})
-					startSubscription(c.Ctx, c.Conn, r.Code)
+					startSubscription(c.Ctx, c.Conn, c.SocketID, r.Code)
 					return true, nil
 				}
 			}
@@ -223,7 +237,7 @@ func deliverRoomStateAfterAuth(baseCtx context.Context, conn *websocket.Conn, re
 	if code, _ := rooms.GetUserRoom(baseCtx, userID); code != "" {
 		if r, users, err := rooms.GetRoom(baseCtx, code); err == nil {
 			writeJSON(conn, map[string]any{"type": "room:state", "room": r, "users": users})
-			startSubscription(baseCtx, conn, r.Code)
+			startSubscription(baseCtx, conn, socketID, r.Code)
 			return
 		}
 	}

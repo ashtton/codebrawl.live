@@ -25,10 +25,8 @@ func authHandler(c *Context) (bool, error) {
 		return true, nil
 	}
 
-	// Update connection registry to authed
 	c.Registry.Set(c.SocketID, res.UserID, connections.StateAuthed)
 
-	// Best-effort cache of user metadata in Redis
 	if r := database.Client(); r != nil {
 		if res.Username != "" {
 			if err := r.HSet(c.Ctx, "usernames", res.UserID, res.Username).Err(); err != nil {
@@ -45,7 +43,7 @@ func authHandler(c *Context) (bool, error) {
 	resp := map[string]any{"type": "auth:ok", "userId": res.UserID, "username": res.Username, "imageUrl": res.ImageURL, "issuer": res.Issuer, "exp": res.ExpiresAt.Unix()}
 	b, _ := json.Marshal(resp)
 	_ = SafeWriteMessage(c.Conn, b)
-	// After auth, push current room state and subscribe to changes
+
 	deliverRoomStateAfterAuth(c.Ctx, c.Conn, c.Registry, c.SocketID, res.UserID)
 	return true, nil
 }

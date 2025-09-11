@@ -61,6 +61,10 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		_ = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	}
 	reg.Delete(id)
+	// clear any room subscriptions for this socket
+	if r := database.Client(); r != nil {
+		_ = r.Del(context.Background(), "subs:"+id).Err()
+	}
 }
 
 func main() {
