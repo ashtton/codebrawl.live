@@ -1,0 +1,102 @@
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+  redirect,
+  useRouteContext,
+} from '@tanstack/react-router'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { TanStackDevtools } from '@tanstack/react-devtools'
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+
+import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+
+import appCss from '../styles.css?url'
+
+import type { QueryClient } from '@tanstack/react-query'
+import type { ConvexQueryClient } from '@convex-dev/react-query'
+import { createServerFn } from '@tanstack/react-start'
+import { getToken } from '#/lib/auth-server'
+import { authClient } from '#/lib/auth-client'
+
+interface MyRouterContext {
+  queryClient: QueryClient,
+  convexQueryClient: ConvexQueryClient
+}
+
+const getAuth = createServerFn({ method: 'GET' }).handler(async () => {
+  return await getToken()
+})
+
+const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`
+
+export const Route = createRootRouteWithContext<MyRouterContext>()({
+  head: () => ({
+    meta: [
+      {
+        charSet: 'utf-8',
+      },
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
+      },
+      {
+        title: 'TanStack Start Starter',
+      },
+    ],
+    links: [
+      {
+        rel: 'stylesheet',
+        href: appCss,
+      },
+    ],
+  }),
+  beforeLoad: async (ctx) => {
+    const token = await getAuth()
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token)
+    }
+
+    const isAuthenticated = !!token
+
+    return {
+      isAuthenticated,
+      token,
+    }
+  },
+  shellComponent: RootDocument,
+})
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  const context = useRouteContext({from: Route.id})
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <HeadContent />
+      </head>
+      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+        <ConvexBetterAuthProvider
+          client={context.convexQueryClient.convexClient}
+          authClient={authClient}
+          initialToken={context.token}
+        >
+          {children}
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right',
+            }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              TanStackQueryDevtools,
+            ]}
+          />
+        </ConvexBetterAuthProvider>
+        <Scripts />
+      </body>
+    </html>
+  )
+}

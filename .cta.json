@@ -1,0 +1,25 @@
+{
+  "projectName": "codebrawl",
+  "mode": "file-router",
+  "typescript": true,
+  "packageManager": "npm",
+  "includeExamples": true,
+  "tailwind": true,
+  "addOnOptions": {},
+  "envVarValues": {
+    "CONVEX_DEPLOYMENT": "limitless-frog-858",
+    "VITE_CONVEX_URL": "https://limitless-frog-858.convex.cloud"
+  },
+  "git": true,
+  "install": true,
+  "routerOnly": false,
+  "version": 1,
+  "framework": "react",
+  "chosenAddOns": [
+    "nitro",
+    "convex",
+    "tanstack-query",
+    "store",
+    "resume"
+  ]
+}
